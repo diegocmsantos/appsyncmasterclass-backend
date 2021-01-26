@@ -3,6 +3,7 @@ const AWS = require('aws-sdk')
 const fs = require('fs')
 const velocityMapper = require('amplify-appsync-simulator/lib/velocity/value-mapper/mapper')
 const velocityTemplate = require('amplify-velocity-template')
+const GraphQL = require('../lib/graphql')
 
 const we_invoke_confirmUserSignup = async (username, name, email) => {
     const handler = require('../../functions/confirm-user-signup').handler
@@ -73,8 +74,37 @@ const we_invoke_an_appsync_template = (templatePath, context) => {
     return JSON.parse(compiler.render(context))
 }
 
+const a_user_calls_getMyProfile = async (user) => {
+    const getMyProfile = `query MyQuery {
+        getMyProfile {
+          bio
+          birthdate
+          createdAt
+          followersCount
+          followingCount
+          id
+          location
+          name
+          profileBackgroundImageUrl
+          profileImageUrl
+          screenName
+          tweetsCount
+          website
+          likesCount
+        }
+      }`
+
+      const data = await GraphQL(process.env.API_URL, getMyProfile, {}, user.accessToken)
+      const profile = data.getMyProfile
+
+      console.log(`[${user.username}] - fetched profile`)
+
+      return profile
+}
+
 module.exports = {
     we_invoke_confirmUserSignup,
     a_user_signs_up,
-    we_invoke_an_appsync_template
+    we_invoke_an_appsync_template,
+    a_user_calls_getMyProfile
 }

@@ -18,7 +18,7 @@ describe('When confirmUserSignup runs', () => {
             followersCount: 0,
             followingCount: 0,
             tweetsCount: 0,
-            likesCounts: 0
+            likesCount: 0
         })
 
         const [firstName, lastName] = name.split(' ')
