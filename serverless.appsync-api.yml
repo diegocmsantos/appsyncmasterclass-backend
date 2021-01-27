@@ -1,4 +1,4 @@
-name: appsyincmasterclass
+name: appsyncmasterclass
 schema: schema.api.graphql
 authenticationType: AMAZON_COGNITO_USER_POOLS
 userPoolConfig:
@@ -9,6 +9,10 @@ mappingTemplatesLocation: mapping-templates
 mappingTemplates:
   - type: Query
     field: getMyProfile
+    dataSource: usersTable
+
+  - type: Mutation
+    field: editMyProfile
     dataSource: usersTable
 
 dataSources:
