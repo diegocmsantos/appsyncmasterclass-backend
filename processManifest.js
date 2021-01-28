@@ -19,7 +19,7 @@ module.exports = async function processManifest(manifestData) {
 
   const dotEnvFile = path.resolve('.env')
   await updateDotEnv(dotEnvFile, {
-    API_URL: getOutputValue('AppsyincmasterclassGraphQlApiUrl'),
+    API_URL: getOutputValue('AppsyncmasterclassGraphQlApiUrl'),
   })
 }
 
