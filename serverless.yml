@@ -41,7 +41,7 @@ functions:
     iamRoleStatements:
       - Effect: Allow
         Action: dynamodb:PutItem
-        Resource: !Sub ${UsersTable.Arn}/*
+        Resource: !GetAtt UsersTable.Arn
 
   getImageUploadUrl:
     handler: functions/get-upload-url.handler
@@ -52,7 +52,7 @@ functions:
         Action:
           - s3:PutObject
           - s3:PutObjectAcl
-        Resource: !GetAtt AssetsBucket.Arn
+        Resource: !Sub ${AssetsBucket.Arn}/*
 
 resources:
   Resources:
@@ -132,7 +132,7 @@ resources:
   Outputs:
     AwsRegion:
       Value: ${self:custom.region}
-    CongnitoUserPoolId:
+    CognitoUserPoolId:
       Value: !Ref CognitoUserPool
     WebCognitoUserPoolClientId:
       Value: !Ref WebUserPoolClient
