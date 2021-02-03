@@ -28,7 +28,7 @@ const we_invoke_confirmUserSignup = async (username, name, email) => {
         "response": {}
     }
 
-    await handler(event, context)
+    return await handler(event, context)
 }
 
 const we_invoke_getImageUploadUrl = async (username, extension, contentType) => {
@@ -45,7 +45,23 @@ const we_invoke_getImageUploadUrl = async (username, extension, contentType) => 
         }
     }
 
-    await handler(event, context)
+    return await handler(event, context)
+}
+
+const we_invoke_tweet = async (username, text) => {
+    const handler = require('../../functions/tweet').handler
+
+    const context = {}
+    const event = {
+        identity: {
+            username
+        },
+        arguments: {
+            text
+        }
+    }
+
+    return await handler(event, context)
 }
 
 const a_user_signs_up = async (password, name, email) => {
@@ -175,5 +191,6 @@ module.exports = {
     a_user_calls_getMyProfile,
     a_user_calls_editMyProfile,
     we_invoke_getImageUploadUrl,
-    a_user_calls_getImageUploadUrl
+    we_invoke_tweet,
+    a_user_calls_getImageUploadUrl,
 }
