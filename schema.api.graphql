@@ -6,7 +6,7 @@ schema {
 type Query {
     getImageUploadUrl(extension: String, contentType: String): AWSURL!
 
-    getMyTimeline(limit: Int!, nextToken: String): TweetsPage!
+    getMyTimeline(limit: Int!, nextToken: String): TimelinePage!
 
     getMyProfile: MyProfile!
 
@@ -146,6 +146,11 @@ type Retweet {
 
 
 type TweetsPage {
+    tweets: [ITweet!]
+    nextToken: String
+}
+
+type TimelinePage {
     tweets: [ITweet!]
     nextToken: String
 }
