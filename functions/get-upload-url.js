@@ -29,8 +29,6 @@ module.exports.handler = async (event) => {
     ContentType: contentType
   }
 
-  console.log('PARAMS:', params)
-
   const signedUrl = s3.getSignedUrl('putObject', params)
   return signedUrl
 }
