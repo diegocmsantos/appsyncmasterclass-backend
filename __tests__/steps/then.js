@@ -57,7 +57,6 @@ const tweet_exists_in_TweetsTable = async (id) => {
 const retweet_exists_in_TweetsTable = async (userId, tweetId) => {
     const DynamoDB = new AWS.DynamoDB.DocumentClient()
 
-    console.log
     console.log(`looking for retweet of [${tweetId}] in table [${process.env.TWEETS_TABLE}]`)
     const resp = await DynamoDB.query({
         TableName: process.env.TWEETS_TABLE,
