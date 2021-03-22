@@ -1,6 +1,6 @@
+require('dotenv').config()
 const given = require('../../steps/given')
 const when = require('../../steps/when')
-const then = require('../../steps/then')
 const chance = require('chance').Chance()
 
 describe('Given an authenticated user', () => {
@@ -16,13 +16,13 @@ describe('Given an authenticated user', () => {
       tweet = await when.a_user_calls_tweet(userA, text)
     })
 
-    it('Should return the new tweet', async () => {
+    it('Should return the new tweet', () => {
       expect(tweet).toMatchObject({
         text,
         replies: 0,
         likes: 0,
         retweets: 0,
-        liked: false
+        liked: false,
       })
     })
 
@@ -34,13 +34,13 @@ describe('Given an authenticated user', () => {
         nextToken = result.nextToken
       })
 
-      it('He will see a new tweet in the tweets array', () => {
+      it('He will see the new tweet in the tweets array', () => {
         expect(nextToken).toBeNull()
         expect(tweets.length).toEqual(1)
         expect(tweets[0]).toEqual(tweet)
       })
   
-      it('He cannot ask for more than 25 tweets per page', async () => {
+      it('He cannot ask for more than 25 tweets in a page', async () => {
         await expect(when.a_user_calls_getTweets(userA, userA.username, 26))
           .rejects
           .toMatchObject({
@@ -57,13 +57,13 @@ describe('Given an authenticated user', () => {
         nextToken = result.nextToken
       })
 
-      it('He will see a new tweet in the tweets array', () => {
+      it('He will see the new tweet in the tweets array', () => {
         expect(nextToken).toBeNull()
         expect(tweets.length).toEqual(1)
         expect(tweets[0]).toEqual(tweet)
       })
   
-      it('He cannot ask for more than 25 tweets per page', async () => {
+      it('He cannot ask for more than 25 tweets in a page', async () => {
         await expect(when.a_user_calls_getMyTimeline(userA, 26))
           .rejects
           .toMatchObject({
@@ -72,7 +72,7 @@ describe('Given an authenticated user', () => {
       })
     })
 
-    describe('When he likes a tweet', () => {
+    describe('When he likes the tweet', () => {
       beforeAll(async () => {
         await when.a_user_calls_like(userA, tweet.id)
       })
@@ -85,7 +85,7 @@ describe('Given an authenticated user', () => {
         expect(tweets[0].liked).toEqual(true)
       })
 
-      it('Should be able to like the same tweet a second time', async () => {
+      it('Should not be able to like the same tweet a second time', async () => {
         await expect(() => when.a_user_calls_like(userA, tweet.id))
           .rejects
           .toMatchObject({
@@ -95,7 +95,7 @@ describe('Given an authenticated user', () => {
 
       it('Should see this tweet when he calls getLikes', async () => {
         const { tweets, nextToken } = await when.a_user_calls_getLikes(userA, userA.username, 25)
-  
+
         expect(nextToken).toBeNull()
         expect(tweets).toHaveLength(1)
         expect(tweets[0]).toMatchObject({
@@ -109,39 +109,39 @@ describe('Given an authenticated user', () => {
         })
       })
 
-    })
+      describe('When he unlikes the tweet', () => {
+        beforeAll(async () => {
+          await when.a_user_calls_unlike(userA, tweet.id)
+        })
 
-    describe('When he unlikes a tweet', () => {
-      beforeAll(async () => {
-        await when.a_user_calls_unlike(userA, tweet.id)
-      })
+        it('Should see Tweet.liked as false', async () => {
+          const { tweets } = await when.a_user_calls_getMyTimeline(userA, 25)
+  
+          expect(tweets).toHaveLength(1)
+          expect(tweets[0].id).toEqual(tweet.id)
+          expect(tweets[0].liked).toEqual(false)
+        })
+  
+        it('Should not be able to unlike the same tweet a second time', async () => {
+          await expect(() => when.a_user_calls_unlike(userA, tweet.id))
+            .rejects
+            .toMatchObject({
+              message: expect.stringContaining('DynamoDB transaction error')
+            })
+        })
 
-      it('Should see Tweet.liked as true', async () => {
-        const { tweets } = await when.a_user_calls_getMyTimeline(userA, 25)
+        it('Should not see this tweet when he calls getLikes anymore', async () => {
+          const { tweets, nextToken } = await when.a_user_calls_getLikes(userA, userA.username, 25)
 
-        expect(tweets).toHaveLength(1)
-        expect(tweets[0].id).toEqual(tweet.id)
-        expect(tweets[0].liked).toEqual(false)
-      })
-
-      it('Should be able to unlike the same tweet a second time', async () => {
-        await expect(() => when.a_user_calls_unlike(userA, tweet.id))
-          .rejects
-          .toMatchObject({
-            message: expect.stringContaining('DynamoDB transaction error')
-          })
-      })
-
-      it('Should not see this tweet when he calls getLikes anymore', async () => {
-        const { tweets, nextToken } = await when.a_user_calls_getLikes(userA, userA.username, 25)
-
-        expect(nextToken).toBeNull()
-        expect(tweets).toHaveLength(0)
+          expect(nextToken).toBeNull()
+          expect(tweets).toHaveLength(0)
+        })
       })
     })
 
     describe('When he retweets the tweet', () => {
       beforeAll(async () => {
+        console.log('TWEET PRINT', tweet)
         await when.a_user_calls_retweet(userA, tweet.id)
       })
 
@@ -189,6 +189,27 @@ describe('Given an authenticated user', () => {
           }
         })
       })
+
+      describe('When he unretweets the tweet', () => {
+        beforeAll(async () => {
+          await when.a_user_calls_unretweet(userA, tweet.id)
+        })
+
+        it('Should not see the retweet when he calls getTweets anymore', async () => {
+          const { tweets } = await when.a_user_calls_getTweets(userA, userA.username, 25)
+
+          expect(tweets).toHaveLength(1)
+          expect(tweets[0]).toMatchObject({
+            ...tweet,
+            retweets: 0,
+            retweeted: false,
+            profile: {
+              id: userA.username,
+              tweetsCount: 1
+            }
+          })
+        })
+      })
     })
 
     describe('Given another user, user B, sends a tweet', () => {
@@ -207,11 +228,11 @@ describe('Given an authenticated user', () => {
         it('Should see the retweet when he calls getTweets', async () => {
           const { tweets } = await when.a_user_calls_getTweets(userA, userA.username, 25)
   
-          expect(tweets).toHaveLength(3)
+          expect(tweets).toHaveLength(2)
           expect(tweets[0]).toMatchObject({
             profile: {
               id: userA.username,
-              tweetsCount: 3
+              tweetsCount: 2
             },
             retweetOf: {
               ...anotherTweet,
@@ -228,7 +249,7 @@ describe('Given an authenticated user', () => {
           expect(tweets[0]).toMatchObject({
             profile: {
               id: userA.username,
-              tweetsCount: 3
+              tweetsCount: 2
             },
             retweetOf: {
               ...anotherTweet,
@@ -238,9 +259,40 @@ describe('Given an authenticated user', () => {
           })
         })
 
+        describe("When user A unretweets user B's tweet", () => {
+          beforeAll(async () => {
+            await when.a_user_calls_unretweet(userA, anotherTweet.id)
+          })
+
+          it('User A should not see the retweet when he calls getTweets anymore', async () => {
+            const { tweets } = await when.a_user_calls_getTweets(userA, userA.username, 25)
+
+            expect(tweets).toHaveLength(1)
+            expect(tweets[0]).toMatchObject({
+              ...tweet,
+              retweets: 0,
+              retweeted: false,
+              profile: {
+                id: userA.username,
+                tweetsCount: 1
+              }
+            })
+          })
+
+          it('User A should not see the retweet when he calls getMyTimeline anymore', async () => {
+            const { tweets } = await when.a_user_calls_getMyTimeline(userA, 25)
+  
+            expect(tweets).toHaveLength(1)
+            expect(tweets[0]).toMatchObject({
+              ...tweet,
+              profile: {
+                id: userA.username,
+                tweetsCount: 1
+              }
+            })
+          })
+        })
       })
-
     })
-
   })
 })

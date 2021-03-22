@@ -1,5 +1,6 @@
 const DynamoDB = require('aws-sdk/clients/dynamodb')
 const DocumentClient = new DynamoDB.DocumentClient()
+const _ = require('lodash')
 
 const { USERS_TABLE, TIMELINES_TABLE, TWEETS_TABLE, RETWEETS_TABLE } = process.env
 
@@ -7,12 +8,12 @@ module.exports.handler = async (event) => {
   const { tweetId } = event.arguments
   const { username } = event.identity
 
-  const resp = await DynamoDB.query({
+  const resp = await DocumentClient.query({
     TableName: process.env.TWEETS_TABLE,
     IndexName: 'retweetsByCreator',
     KeyConditionExpression: 'creator = :creator AND retweetOf = :tweetId',
     ExpressionAttributeValues: {
-        ':creator': userId,
+        ':creator': username,
         ':tweetId': tweetId
     },
     Limit: 1
@@ -67,14 +68,14 @@ const retweet = _.get(resp, 'Items.0')
     }
   }]
 
-  console.log(`creator: [${tweet.creator}]; username: [${username}]`)
-  if (tweet.creator != username) {
+  console.log(`creator: [${retweet.creator}]; username: [${username}]`)
+  if (retweet.creator != username) {
       transactItems.push({
-        Put: {
+        Delete: {
             TableName: TIMELINES_TABLE,
-            Item: {
+            Key: {
               userId: username,
-              tweetId: id
+              tweetId: retweet.id
             }
         } 
       })
