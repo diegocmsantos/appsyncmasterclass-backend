@@ -54,6 +54,29 @@ const tweet_exists_in_TweetsTable = async (id) => {
     return resp.Item
 }
 
+const reply_exists_in_TweetsTable = async (userId, tweetId) => {
+    const DynamoDB = new AWS.DynamoDB.DocumentClient()
+
+    const tableName = process.env.TWEETS_TABLE
+    console.log(`looking for reply by [${userId}] to [${tweetId}] in table [${tableName}]`)
+    const resp = await DynamoDB.query({
+        TableName: tableName,
+        IndexName: 'repliesForTweet',
+        KeyConditionExpression: 'inReplyToTweetId = :tweetId',
+        ExpressionAttributeValues: {
+          ':userId': userId,
+          ':tweetId': tweetId
+        },
+        FilterExpression: 'creator = :userId'
+      }).promise()
+    
+      const reply = _.get(resp, 'Items.0')
+    
+      expect(reply).toBeTruthy()
+    
+      return reply
+}
+
 const retweet_exists_in_TweetsTable = async (userId, tweetId) => {
     const DynamoDB = new AWS.DynamoDB.DocumentClient()
 
@@ -157,6 +180,7 @@ module.exports = {
     user_exists_in_UsersTable,
     tweetsCount_is_updated_in_UsersTable,
     tweet_exists_in_TweetsTable,
+    reply_exists_in_TweetsTable,
     retweet_exists_in_TweetsTable,
     retweet_exists_in_RetweetsTable,
     there_are_N_tweets_in_TimelinesTable,

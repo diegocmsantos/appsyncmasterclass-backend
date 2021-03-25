@@ -3,11 +3,12 @@ const DocumentClient = new DynamoDB.DocumentClient()
 const ulid = require('ulid')
 const { TweetTypes } = require('../lib/constants')
 const { getTweetById } = require('../lib/tweets')
+const _ = require('lodash')
 
 const { USERS_TABLE, TIMELINES_TABLE, TWEETS_TABLE } = process.env
 
 module.exports.handler = async (event) => {
-  const { tweetId } = event.arguments
+  const { tweetId, text } = event.arguments
   const { username } = event.identity
   const id = ulid.ulid()
   const timestamp = new Date().toJSON()
@@ -17,7 +18,7 @@ module.exports.handler = async (event) => {
       throw new Error("Tweet is not found")
   }
 
-  const inReplyToUsersIds = await getUsersIdsToReplyTo(tweet)
+  const inReplyToUserIds = await getUsersIdsToReplyTo(tweet)
 
   const newTweet = {
     __typename: TweetTypes.REPLY,
@@ -25,7 +26,7 @@ module.exports.handler = async (event) => {
     creator: username,
     createdAt: timestamp,
     inReplyToTweetId: tweetId, 
-    inReplyToUsersIds,
+    inReplyToUserIds,
     text,
     replies: 0,
     likes: 0,
@@ -84,7 +85,7 @@ module.exports.handler = async (event) => {
 const getUsersIdsToReplyTo = async (tweet) => {
   let usersIds = [tweet.creator]
   if (tweet.__typename === TweetTypes.REPLY) {
-    usersIds = usersIds.concat(tweet.inReplyToUsersIds)
+    usersIds = usersIds.concat(tweet.inReplyToUserIds)
   } else if (tweet.__typename === TweetTypes.RETWEET) {
     const retweetOf = await getTweetById(tweet.retweetOf)
     usersIds = usersIds.concat(await getUsersIdsToReplyTo(retweetOf))

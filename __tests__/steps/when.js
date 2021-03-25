@@ -163,6 +163,23 @@ const we_invoke_tweet = async (username, text) => {
     return await handler(event, context)
 }
 
+const we_invoke_reply = async (username, tweetId, text) => {
+    const handler = require('../../functions/reply').handler
+
+    const context = {}
+    const event = {
+        identity: {
+            username
+        },
+        arguments: {
+            tweetId,
+            text
+        }
+    }
+
+    return await handler(event, context)
+}
+
 const we_invoke_retweet = async (username, tweetId) => {
     const handler = require('../../functions/retweet').handler
 
@@ -445,6 +462,7 @@ module.exports = {
     a_user_calls_editMyProfile,
     we_invoke_getImageUploadUrl,
     we_invoke_tweet,
+    we_invoke_reply,
     we_invoke_retweet,
     a_user_calls_getImageUploadUrl,
     a_user_calls_tweet,
